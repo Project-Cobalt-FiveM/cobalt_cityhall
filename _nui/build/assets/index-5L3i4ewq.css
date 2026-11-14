@@ -1,0 +1,1 @@
+.confetti.svelte-ezs86c{opacity:0;animation-name:svelte-ezs86c-fall;animation-timing-function:cubic-bezier(.3,.4,.6,1);animation-fill-mode:both;position:absolute;top:0}@keyframes svelte-ezs86c-fall{0%{opacity:1;transform:translateY(-4vh)rotate(0)}80%{opacity:1}to{opacity:0;transform:translate3d(var(--drift), 104vh, 0) rotate(var(--spin))}}

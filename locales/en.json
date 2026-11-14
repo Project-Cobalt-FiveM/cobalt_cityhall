@@ -1,0 +1,17 @@
+{
+    "card": {
+        "licence": "%s licence",
+        "id_card": "an ID card",
+        "licence_card": "a %s card",
+        "pick": "Pick a card",
+        "at_desk": "Buy cards at the City Hall desk",
+        "unknown": "That card doesn't exist",
+        "not_held": "You don't hold a %s",
+        "not_loaded": "Your character isn't loaded",
+        "pockets_full": "Your pockets are full",
+        "cannot_afford": "You need $%d in cash or in the bank for %s",
+        "not_given": "The card couldn't go in your pockets",
+        "refund": "%s refund",
+        "bought": "You bought %s"
+    }
+}
