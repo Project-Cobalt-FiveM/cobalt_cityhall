@@ -10,6 +10,8 @@ local ANIM_BLEND_OUT <const> = 1.0
 local Work <const> = {}
 
 local busy = false
+---@type JobAnim?
+local acting
 
 ---@param anim JobAnim
 function Work.playAnim(anim)
@@ -34,21 +36,21 @@ function Work.playAnim(anim)
     RemoveAnimDict(anim.dict)
 end
 
----@param anim JobAnim
-function Work.stopAnim(anim)
-    if anim.scenario then
-        ClearPedTasks(cache.ped)
-        return
-    end
-
-    StopAnimTask(cache.ped, anim.dict, anim.clip, ANIM_BLEND_OUT)
-end
-
 ---@return boolean
 function Work.isDown()
     local revive <const> = LocalPlayer.state.revive
 
     return IsEntityDead(cache.ped) or (revive ~= nil and revive.state ~= 'alive')
+end
+
+---@param anim JobAnim
+function Work.stopAnim(anim)
+    if not anim.scenario then
+        StopAnimTask(cache.ped, anim.dict, anim.clip, ANIM_BLEND_OUT)
+        return
+    end
+
+    if not Work.isDown() then ClearPedTasks(cache.ped) end
 end
 
 ---@param check JobSkillCheck
@@ -65,6 +67,8 @@ end
 ---@param duration integer
 ---@return boolean
 local function perform(action, duration)
+    acting = action.anim
+
     Work.playAnim(action.anim)
 
     if action.prop then Props.hold(action.prop) end
@@ -81,13 +85,14 @@ local function perform(action, duration)
     if stopSwing then stopSwing() end
     if action.prop then Props.release() end
 
-    if not Work.isDown() then Work.stopAnim(action.anim) end
+    Work.stopAnim(action.anim)
+    acting = nil
 
     return done == true
 end
 
 ---@param coords vector3
-local function face(coords)
+function Work.face(coords)
     TaskTurnPedToFaceCoord(cache.ped, coords.x, coords.y, coords.z, TURN_MS)
     Wait(TURN_MS)
 end
@@ -101,7 +106,7 @@ function Work.run(target, action, facing)
 
     busy = true
 
-    if facing then face(facing) end
+    if facing then Work.face(facing) end
 
     local duration <const> = lib.callback.await('cobalt_cityhall:begin', false, target)
     local ok = false
@@ -231,6 +236,10 @@ AddStateBagChangeHandler('revive', ('player:%s'):format(cache.serverId), functio
     if not busy or not value or value.state == 'alive' or value.state == 'reviving' then return end
 
     exports.cobalt_core:cancelProgress()
+end)
+
+AddEventHandler('onResourceStop', function(resource)
+    if resource == cache.resource and acting then Work.stopAnim(acting) end
 end)
 
 return Work

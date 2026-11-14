@@ -3,8 +3,29 @@ local Registry <const> = require 'server.registry'
 local Shifts <const> = require 'server.shifts'
 local Vehicles <const> = require 'server.vehicles'
 local Gather <const> = require 'server.kinds.gather'
+local Jobs <const> = require 'shared.jobs'
 
 local SITE_SLACK <const> = 3.0
+
+---@param def JobDefinition
+---@return string
+local function shopId(def)
+    return ('cobalt_cityhall:%s'):format(def.id)
+end
+
+local function registerShops()
+    for _, def in pairs(Jobs.byId) do
+        local shop <const> = def.shop
+
+        if shop then exports.cobalt_inventory:RegisterShop(shopId(def), { label = shop.label, items = shop.items }) end
+    end
+end
+
+registerShops()
+
+AddEventHandler('onResourceStart', function(resource)
+    if resource == 'cobalt_inventory' then registerShops() end
+end)
 
 lib.callback.register('cobalt_cityhall:begin', function(src, target)
     local shift <const> = Registry.get(src)
@@ -57,12 +78,16 @@ lib.callback.register('cobalt_cityhall:sell', function(src)
     return true
 end)
 
-lib.callback.register('cobalt_cityhall:buyGear', function(src, index)
+lib.callback.register('cobalt_cityhall:shop', function(src)
     local shift <const> = Registry.get(src)
 
-    if not shift or shift.def.kind ~= 'gather' then return false end
+    if not shift or not shift.def.shop then return false end
 
-    return Gather.buyGear(shift, index)
+    local coords <const> = shift.def.site.coords
+
+    if not Registry.near(src, coords, config.interactRange + SITE_SLACK) then return false end
+
+    return exports.cobalt_inventory:OpenShop(src, shopId(shift.def), coords)
 end)
 
 lib.callback.register('cobalt_cityhall:vehicle', function(src, take)
@@ -76,7 +101,7 @@ lib.callback.register('cobalt_cityhall:vehicle', function(src, take)
     if not take then
         if not Vehicles.has(shift) then return false end
 
-        Shifts.loseVehicle(shift, ('You returned the %s.'):format(label))
+        Shifts.loseVehicle(shift, locale('site.returned_vehicle', label))
 
         return true
     end
@@ -91,9 +116,12 @@ lib.callback.register('cobalt_cityhall:vehicle', function(src, take)
     Shifts.sync(shift)
 
     local task <const> = Shifts.kind(shift).view(shift)
-    local next <const> = task and (' Next: %s.'):format(task.title) or ''
 
-    Registry.notify(src, ('Your %s is waiting in the bay.%s'):format(label, next), 'success')
+    if task then
+        Registry.notify(src, locale('site.vehicle_ready_next', label, task.title), 'success')
+    else
+        Registry.notify(src, locale('site.vehicle_ready', label), 'success')
+    end
 
     return true
 end)

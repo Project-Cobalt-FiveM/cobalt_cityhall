@@ -1,14 +1,14 @@
 ---@type JobData
 return {
-    label = 'Recycling',
-    description = 'Sort crates in the recycling warehouse and sell what you find.',
+    label = locale('recycling.label'),
+    description = locale('recycling.description'),
     icon = 'recycle',
     kind = 'gather',
-    doneLabel = 'Crates sorted',
-    goods = 'Materials',
+    doneLabel = locale('recycling.done'),
+    goods = locale('recycling.goods'),
     crewSize = 4,
     site = {
-        label = 'La Mesa Recycling',
+        label = locale('recycling.site'),
         coords = vec4(739.66, -1376.61, 12.5, 272.72),
         ped = 's_m_y_construct_02',
         scenario = 'WORLD_HUMAN_CLIPBOARD',
@@ -21,19 +21,28 @@ return {
     },
     -- Dollars the buyer pays for each material
     prices = { plastic = 9, aluminum = 12, cardboard = 6, glass_shards = 8, rubber_scrap = 10, iron = 14, copper = 18 },
+    sell = locale('recycling.sell'), -- the laptop's option that sells every material in prices at once
+    -- The laptop on the office desk where workers sell their materials, in place of the foreman
+    sellPoint = {
+        coords = vec3(739.55, -1376.5, 12.14), -- the laptop's position
+        radius = 2.0, -- meters from the laptop the player can use it
+        label = locale('recycling.selling'), -- progress bar text while the sale goes through
+        duration = 3000, -- milliseconds at the laptop before the sale goes through
+        anim = { dict = 'anim@heists@prison_heiststation@cop_reactions', clip = 'cop_b_idle', flag = 1 }, -- typing on the laptop
+    },
     -- Things to work in the warehouse
     groups = {
         {
-            label = 'Crate',
+            label = locale('recycling.crate'),
             props = { 'prop_boxpile_01a', 'prop_boxpile_02b', 'prop_boxpile_04a', 'prop_boxpile_05a', 'prop_boxpile_06b' }, -- crate models spawned at the points, one per point in turn
             radius = 1.5, -- meters from a point the player can work it
             cooldown = 45000, -- milliseconds a worked point rests before it can be worked again; 0 never rests
             amount = { 1, 1 }, -- items per action, picked between the two
             action = {
-                label = 'Searching the crate', -- progress bar text
-                prompt = 'Search the crate', -- target option text
+                label = locale('recycling.searching'), -- progress bar text
+                prompt = locale('recycling.search'), -- target option text
                 duration = 5000, -- milliseconds, or { shortest, longest } picked between
-                anim = { scenario = 'CODE_HUMAN_MEDIC_KNEEL' }, -- scenario played while searching
+                anim = { dict = 'amb@medic@standing@kneel@base', clip = 'base', flag = 1 }, -- kneeling loop played while searching
             },
             -- Chance of each material, as weights out of the total; amount is the count range for that material
             yields = {

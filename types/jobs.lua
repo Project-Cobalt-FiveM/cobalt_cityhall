@@ -154,11 +154,17 @@
 ---@field amount integer
 ---@field label string as in "You need 2 grapes"
 
----@class JobGear
----@field name string inventory item
----@field label string
----@field amount integer items in one purchase
----@field price integer dollars, cash then bank
+---@class JobSellPoint
+---@field coords vector3 the target the player sells at
+---@field radius number meters from `coords` the player can use it
+---@field label string shown on the progress bar
+---@field duration integer milliseconds before the sale goes through
+---@field anim JobAnim played while the bar fills
+
+---@class JobShop
+---@field label string the name on the shop's header
+---@field prompt string the site ped's option that opens it
+---@field items table<string, InventoryShopItem> keyed by item name
 
 ---@class GatherGroup
 ---@field label string
@@ -195,7 +201,9 @@
 ---@field collect? CollectConfig
 ---@field groups? GatherGroup[]
 ---@field prices? table<string, integer>
----@field gear? JobGear[] what the site ped sells to workers
+---@field sell? string the option that sells everything in `prices`; nil reads "Sell your haul"
+---@field sellPoint? JobSellPoint where the sale happens in place of the site ped
+---@field shop? JobShop what the site ped sells to workers, as a cobalt_inventory shop
 ---@field entrance? { outside: vector4, inside: vector4 }
 
 ---@class TaskView

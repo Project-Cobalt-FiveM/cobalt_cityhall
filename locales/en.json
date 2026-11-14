@@ -35,6 +35,31 @@
         "quit_first": "Quit your current job first",
         "joined": "%s joined your crew"
     },
+    "site": {
+        "take_vehicle": "Take the %s",
+        "return_vehicle": "Return the %s",
+        "returned_vehicle": "You returned the %s.",
+        "vehicle_ready": "Your %s is waiting in the bay.",
+        "vehicle_ready_next": "Your %s is waiting in the bay. Next: %s.",
+        "sell": "Sell your haul"
+    },
+    "gather": {
+        "move_closer": "Move closer",
+        "resting": "Nothing left here for now",
+        "need": "You need %d %s",
+        "caught": "You caught %s",
+        "caught_nothing": "You caught nothing",
+        "pockets_full": "You can't carry any more",
+        "taken": "Someone got there first",
+        "goods": "goods",
+        "nothing_to_sell": "You have no %s to sell",
+        "sale_failed": "The sale fell through. You kept everything.",
+        "sold": "sold %s",
+        "sold_item": "%d %s",
+        "sold_list": "%s and %s",
+        "go_inside": "Go inside",
+        "go_outside": "Go outside"
+    },
     "payout": {
         "bank": "$%d to your bank, %s",
         "cash": "$%d in cash, %s"
@@ -88,8 +113,8 @@
         "done": "Catches",
         "goods": "Fish",
         "site": "Fish market",
-        "rod": "Fishing rod",
-        "bait": "Fish bait",
+        "browse": "Browse fishing gear",
+        "sell": "Sell your whole catch",
         "spot": "Fishing spot",
         "rod_needed": "fishing rod",
         "bait_needed": "fish bait",
@@ -97,6 +122,18 @@
         "reeling": "Reeling in",
         "got_away": "The fish slipped the hook. Cast again.",
         "pier_end": "End of Del Perro Pier"
+    },
+    "recycling": {
+        "label": "Recycling",
+        "description": "Sort crates in the recycling warehouse and sell what you find at the office laptop.",
+        "done": "Crates sorted",
+        "goods": "Materials",
+        "site": "La Mesa Recycling",
+        "sell": "Sell recycled materials",
+        "selling": "Selling your materials",
+        "crate": "Crate",
+        "searching": "Searching the crate",
+        "search": "Search the crate"
     },
     "farming": {
         "label": "Farming",

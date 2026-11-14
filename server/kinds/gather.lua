@@ -1,11 +1,11 @@
 local config <const> = require 'config'
 local Registry <const> = require 'server.registry'
 local Payout <const> = require 'server.payout'
-local Payment <const> = require 'server.payment'
 local Jobs <const> = require 'shared.jobs'
 
 local REACH_SLACK <const> = 2.5
 local DEFAULT_RADIUS <const> = 2.0
+local SELL_REASON <const> = 'cobalt_cityhall:sell'
 
 ---@type table<string, table<string, integer>>
 local readyAt <const> = {}
@@ -122,12 +122,12 @@ function Gather.begin(shift, target)
 
     local reach <const> = (point.radius or spec.radius or DEFAULT_RADIUS) + REACH_SLACK
 
-    if not Registry.near(shift.src, point.coords, reach) then return nil, 'Move closer' end
-    if resting(shift.def.id, nodeKey(target.group, target.index)) > 0 then return nil, 'Nothing left here for now' end
+    if not Registry.near(shift.src, point.coords, reach) then return nil, locale('gather.move_closer') end
+    if resting(shift.def.id, nodeKey(target.group, target.index)) > 0 then return nil, locale('gather.resting') end
 
     local missing <const> = lacking(shift.src, spec.requires) or lacking(shift.src, spec.consumes)
 
-    if missing then return nil, ('You need %d %s'):format(missing.amount, missing.label) end
+    if missing then return nil, locale('gather.need', missing.amount, missing.label) end
 
     local duration <const> = Jobs.rollDuration(spec.action.duration)
 
@@ -143,7 +143,12 @@ end
 local function grant(shift, yield, amount)
     if not yield.name then
         if (yield.value or 0) <= 0 then
-            Registry.notify(shift.src, ('You caught %s'):format((yield.label or 'nothing'):lower()))
+            if yield.label then
+                Registry.notify(shift.src, locale('gather.caught', yield.label:lower()))
+            else
+                Registry.notify(shift.src, locale('gather.caught_nothing'))
+            end
+
             return true
         end
 
@@ -153,7 +158,7 @@ local function grant(shift, yield, amount)
     end
 
     if not exports.cobalt_inventory:CanCarry(shift.src, yield.name, amount) then
-        Registry.notify(shift.src, 'You cannot carry any more', 'error')
+        Registry.notify(shift.src, locale('gather.pockets_full'), 'error')
         return false
     end
 
@@ -177,7 +182,7 @@ function Gather.finish(shift, target)
     if not Registry.near(shift.src, point.coords, reach) then return false end
 
     if resting(shift.def.id, key) > 0 then
-        Registry.notify(shift.src, 'Someone got there first', 'error')
+        Registry.notify(shift.src, locale('gather.taken'), 'error')
         return false
     end
 
@@ -185,7 +190,7 @@ function Gather.finish(shift, target)
     local reason <const> = ('cobalt_cityhall:%s'):format(shift.def.id)
 
     if input and not exports.cobalt_inventory:RemoveItem(shift.src, input.name, input.amount, nil, reason) then
-        Registry.notify(shift.src, ('You need %d %s'):format(input.amount, input.label), 'error')
+        Registry.notify(shift.src, locale('gather.need', input.amount, input.label), 'error')
         return false
     end
 
@@ -205,36 +210,43 @@ function Gather.finish(shift, target)
     return true
 end
 
----@param shift Shift
----@param index unknown
----@return boolean
-function Gather.buyGear(shift, index)
-    local gear <const> = math.type(index) == 'integer' and shift.def.gear?[index]
+---@param src integer
+---@param sold { name: string, count: integer }[]
+local function restore(src, sold)
+    for _, entry in ipairs(sold) do
+        exports.cobalt_inventory:AddItem(src, entry.name, entry.count, nil, nil, SELL_REASON)
+    end
+end
 
-    if not gear then return false end
-    if not Registry.near(shift.src, shift.def.site.coords, config.interactRange + REACH_SLACK) then return false end
+---@param sold { name: string, count: integer }[]
+---@return string
+local function describe(sold)
+    local parts <const> = table.create(#sold, 0)
 
-    if not exports.cobalt_inventory:CanCarry(shift.src, gear.name, gear.amount) then
-        Registry.notify(shift.src, 'You cannot carry any more', 'error')
-        return false
+    table.sort(sold, function(x, y) return x.name < y.name end)
+
+    for i, entry in ipairs(sold) do
+        local label <const> = exports.cobalt_inventory:GetItemDef(entry.name)?.label or entry.name
+
+        parts[i] = locale('gather.sold_item', entry.count, label)
     end
 
-    local reason <const> = ('cobalt_cityhall:%s'):format(shift.def.id)
-    local account <const> = Payment.charge(shift.src, gear.price, reason)
+    if #parts == 1 then return parts[1] end
 
-    if not account then
-        Registry.notify(shift.src, ('You need $%d'):format(gear.price), 'error')
-        return false
-    end
+    local last <const> = table.remove(parts)
 
-    if not exports.cobalt_inventory:AddItem(shift.src, gear.name, gear.amount, nil, nil, reason) then
-        Payment.refund(shift.src, account, gear.price, reason)
-        return false
-    end
+    return locale('gather.sold_list', table.concat(parts, ', '), last)
+end
 
-    Registry.notify(shift.src, ('You bought %s'):format(gear.label:lower()), 'success')
+---@param def JobDefinition
+---@return vector3 coords
+---@return number reach
+local function sellSpot(def)
+    local point <const> = def.sellPoint
 
-    return true
+    if point then return point.coords, point.radius + REACH_SLACK end
+
+    return def.site.coords.xyz, config.interactRange + REACH_SLACK
 end
 
 ---@param shift Shift
@@ -243,24 +255,41 @@ function Gather.sell(shift)
     local prices <const> = shift.def.prices
 
     if not prices then return false end
-    if not Registry.near(shift.src, shift.def.site.coords, config.interactRange + REACH_SLACK) then return false end
 
+    local coords <const>, reach <const> = sellSpot(shift.def)
+
+    if not Registry.near(shift.src, coords, reach) then return false end
+
+    local sold <const> = {}
     local total = 0
 
     for item, price in pairs(prices) do
         local count <const> = exports.cobalt_inventory:GetItemCount(shift.src, item) or 0
 
-        if count > 0 and exports.cobalt_inventory:RemoveItem(shift.src, item, count, nil, 'cobalt_cityhall:sell') then
+        if count > 0 then
+            if not exports.cobalt_inventory:RemoveItem(shift.src, item, count, nil, SELL_REASON) then
+                restore(shift.src, sold)
+                Registry.notify(shift.src, locale('gather.sale_failed'), 'error')
+                return false
+            end
+
+            sold[#sold + 1] = { name = item, count = count }
             total += count * price
         end
     end
 
-    if total == 0 then
-        Registry.notify(shift.src, 'You have nothing to sell here', 'error')
+    if #sold == 0 then
+        local goods <const> = shift.def.goods or locale('gather.goods')
+
+        Registry.notify(shift.src, locale('gather.nothing_to_sell', goods:lower()), 'error')
         return false
     end
 
-    Payout.pay(shift, total, 'sold your haul')
+    if Payout.pay(shift, total, locale('gather.sold', describe(sold))) == 0 then
+        restore(shift.src, sold)
+        Registry.notify(shift.src, locale('gather.sale_failed'), 'error')
+        return false
+    end
 
     return true
 end

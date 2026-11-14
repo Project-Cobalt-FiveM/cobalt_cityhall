@@ -17,10 +17,15 @@ return {
     },
     -- Dollars the chef pays for each fish
     prices = { mackerel = 12, bass = 20, salmon = 35 },
-    -- What the chef sells: item, how many come in one purchase, and the price in dollars (cash, then bank)
-    gear = {
-        { name = 'fishingrod', label = locale('fishing.rod'), amount = 1, price = 150 },
-        { name = 'fish_bait', label = locale('fishing.bait'), amount = 10, price = 25 },
+    sell = locale('fishing.sell'), -- the chef's option that sells every fish in prices at once
+    -- The chef's gear counter, opened from the inventory as a shop
+    shop = {
+        label = locale('fishing.site'), -- name on the shop's header
+        prompt = locale('fishing.browse'), -- the chef's option that opens it
+        items = { -- item name = { price = dollars for one }, paid in cash or from the bank
+            fishingrod = { price = 150 },
+            fish_bait = { price = 3 },
+        },
     },
     groups = {
         {

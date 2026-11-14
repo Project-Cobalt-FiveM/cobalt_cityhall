@@ -1,10 +1,12 @@
 local config <const> = require 'config'
 local Jobs <const> = require 'shared.jobs'
 local Work <const> = require 'client.work'
+local play <const> = require 'client.cues'
 local CrewVehicle <const> = require 'client.crewvehicle'
 
 local WRECK_CHECK_MS <const> = 2000
 local SETTLE_TIMEOUT_MS <const> = 3000
+local SELL_ZONE_RADIUS <const> = 0.4
 
 ---@class ClientJobKind
 ---@field enter fun(def: JobDefinition)
@@ -28,10 +30,59 @@ local Shift <const> = {
 ---@type JobDefinition?
 local def
 local siteBlip, taskBlip, sitePed, sitePoint
+---@type integer?
+local sellZone
 
 ---@return boolean
 local function hasVehicle()
     return Shift.current?.vehicle ~= nil
+end
+
+---@param job JobDefinition
+---@return boolean
+local function carriesGoods(job)
+    for item in pairs(job.prices) do
+        if (exports.cobalt_inventory:GetItemCount(item) or 0) > 0 then return true end
+    end
+
+    return false
+end
+
+---@param job JobDefinition
+local function sellAtPoint(job)
+    local point <const> = job.sellPoint --[[@as JobSellPoint]]
+
+    if not carriesGoods(job) then
+        local goods <const> = job.goods or locale('gather.goods')
+
+        return exports.cobalt_core:Notify(locale('gather.nothing_to_sell', goods:lower()), 'error')
+    end
+
+    Work.face(point.coords)
+
+    local done <const> = exports.cobalt_core:Progressbar({
+        label = point.label,
+        duration = point.duration,
+        canCancel = true,
+        disable = { move = true, car = true, combat = true },
+        anim = point.anim,
+    })
+
+    if done and lib.callback.await('cobalt_cityhall:sell', false) then play('purchase') end
+end
+
+---@param job JobDefinition
+---@param distance number
+---@param onSelect fun()
+---@return table
+local function sellOption(job, distance, onSelect)
+    return {
+        name = 'cobalt_cityhall:sell',
+        label = job.sell or locale('site.sell'),
+        icon = 'fa-solid fa-sack-dollar',
+        distance = distance,
+        onSelect = onSelect,
+    }
 end
 
 ---@param job JobDefinition
@@ -42,7 +93,7 @@ local function siteOptions(job)
     if job.vehicle then
         options[#options + 1] = {
             name = 'cobalt_cityhall:takeVehicle',
-            label = ('Take the %s'):format(job.vehicle.label),
+            label = locale('site.take_vehicle', job.vehicle.label),
             icon = 'fa-solid fa-key',
             distance = config.interactRange,
             canInteract = function() return not hasVehicle() end,
@@ -51,7 +102,7 @@ local function siteOptions(job)
 
         options[#options + 1] = {
             name = 'cobalt_cityhall:returnVehicle',
-            label = ('Return the %s'):format(job.vehicle.label),
+            label = locale('site.return_vehicle', job.vehicle.label),
             icon = 'fa-solid fa-rotate-left',
             distance = config.interactRange,
             canInteract = hasVehicle,
@@ -59,24 +110,20 @@ local function siteOptions(job)
         }
     end
 
-    for index, gear in ipairs(job.gear or {}) do
+    if job.shop then
         options[#options + 1] = {
-            name = ('cobalt_cityhall:gear:%d'):format(index),
-            label = ('Buy %s%s ($%d)'):format(gear.amount > 1 and ('%d '):format(gear.amount) or '', gear.label:lower(), gear.price),
+            name = 'cobalt_cityhall:shop',
+            label = job.shop.prompt,
             icon = 'fa-solid fa-basket-shopping',
             distance = config.interactRange,
-            onSelect = function() lib.callback.await('cobalt_cityhall:buyGear', false, index) end,
+            onSelect = function() lib.callback.await('cobalt_cityhall:shop', false) end,
         }
     end
 
-    if job.prices then
-        options[#options + 1] = {
-            name = 'cobalt_cityhall:sell',
-            label = 'Sell your haul',
-            icon = 'fa-solid fa-sack-dollar',
-            distance = config.interactRange,
-            onSelect = function() lib.callback.await('cobalt_cityhall:sell', false) end,
-        }
+    if job.prices and not job.sellPoint then
+        options[#options + 1] = sellOption(job, config.interactRange, function()
+            lib.callback.await('cobalt_cityhall:sell', false)
+        end)
     end
 
     return options
@@ -88,6 +135,16 @@ local function openSite(job)
 
     siteBlip = Work.blip(site.blip.coords or site.coords.xyz, site.blip, site.label, 0.9)
     SetBlipAsShortRange(siteBlip, false)
+
+    local point <const> = job.prices and job.sellPoint
+
+    if point then
+        sellZone = exports.ox_target:addSphereZone({
+            coords = point.coords,
+            radius = SELL_ZONE_RADIUS,
+            options = { sellOption(job, point.radius, function() CreateThread(function() sellAtPoint(job) end) end) },
+        })
+    end
 
     if not site.ped then return end
 
@@ -113,8 +170,9 @@ local function closeSite()
     Work.removeBlip(taskBlip)
     Work.delete(sitePed)
     if sitePoint then sitePoint:remove() end
+    if sellZone then exports.ox_target:removeZone(sellZone) end
 
-    siteBlip, taskBlip, sitePed, sitePoint = nil, nil, nil, nil
+    siteBlip, taskBlip, sitePed, sitePoint, sellZone = nil, nil, nil, nil, nil
 end
 
 ---@param task TaskView?

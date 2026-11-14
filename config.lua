@@ -29,7 +29,7 @@ return {
         id = { label = 'ID card', item = 'id_card', price = 50 }, -- price in dollars
         licences = { -- keys match licences in cobalt_core config/shared.lua; sold only to holders of that licence
             driver = { item = 'driver_license', price = 150 },
-            weapon = { item = 'gun_license', price = 500 },
+            weapon = { item = 'weapon_license', price = 500 },
         },
     },
 

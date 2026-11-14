@@ -235,8 +235,8 @@ function Gather.enter(def)
     end
 
     if def.entrance then
-        door(def.entrance.outside, def.entrance.inside, 'Go inside')
-        door(def.entrance.inside, def.entrance.outside, 'Go outside')
+        door(def.entrance.outside, def.entrance.inside, locale('gather.go_inside'))
+        door(def.entrance.inside, def.entrance.outside, locale('gather.go_outside'))
     end
 end
 
