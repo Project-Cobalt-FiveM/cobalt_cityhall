@@ -1,31 +1,89 @@
 local startSwing <const> = require 'client.swing'
+local Props <const> = require 'client.props'
 
 local GROUND_PROBE_HEIGHT <const> = 2.0
 local GROUND_TIMEOUT_MS <const> = 1500
 local TURN_MS <const> = 600
+local ANIM_BLEND_IN <const> = 3.0
+local ANIM_BLEND_OUT <const> = 1.0
 
 local Work <const> = {}
 
 local busy = false
 
+---@param anim JobAnim
+function Work.playAnim(anim)
+    if anim.scenario then
+        TaskStartScenarioInPlace(cache.ped, anim.scenario, 0, true)
+        return
+    end
+
+    if not DoesAnimDictExist(anim.dict) then
+        lib.print.warn(('%s is not an animation dictionary in the game files'):format(anim.dict))
+        return
+    end
+
+    lib.requestAnimDict(anim.dict)
+    TaskPlayAnim(
+        cache.ped,
+        anim.dict, anim.clip,
+        ANIM_BLEND_IN, ANIM_BLEND_OUT,
+        -1, anim.flag or 49, 0,
+        false, false, false
+    )
+    RemoveAnimDict(anim.dict)
+end
+
+---@param anim JobAnim
+function Work.stopAnim(anim)
+    if anim.scenario then
+        ClearPedTasks(cache.ped)
+        return
+    end
+
+    StopAnimTask(cache.ped, anim.dict, anim.clip, ANIM_BLEND_OUT)
+end
+
+---@return boolean
+function Work.isDown()
+    local revive <const> = LocalPlayer.state.revive
+
+    return IsEntityDead(cache.ped) or (revive ~= nil and revive.state ~= 'alive')
+end
+
+---@param check JobSkillCheck
+---@return boolean
+local function passSkillCheck(check)
+    if exports.cobalt_core:SkillCheck(check.difficulty) and not Work.isDown() then return true end
+
+    exports.cobalt_core:Notify(check.failed, 'error')
+
+    return false
+end
+
 ---@param action JobAction
 ---@param duration integer
 ---@return boolean
 local function perform(action, duration)
-    local stopSwing <const> = action.swing and startSwing(action.anim, action.swing)
+    Work.playAnim(action.anim)
 
-    local done <const> = exports.cobalt_core:Progressbar({
+    if action.prop then Props.hold(action.prop) end
+
+    local stopSwing <const> = action.swing and startSwing(action.anim, action.swing)
+    local passed <const> = not action.skillCheck or passSkillCheck(action.skillCheck)
+    local done <const> = passed and exports.cobalt_core:Progressbar({
         label = action.label,
         duration = duration,
         canCancel = true,
         disable = { move = true, car = true, combat = true },
-        anim = action.anim,
-        prop = action.prop,
     })
 
     if stopSwing then stopSwing() end
+    if action.prop then Props.release() end
 
-    return done
+    if not Work.isDown() then Work.stopAnim(action.anim) end
+
+    return done == true
 end
 
 ---@param coords vector3
@@ -169,11 +227,10 @@ function Work.removeBlip(blip)
     if blip and DoesBlipExist(blip) then RemoveBlip(blip) end
 end
 
----@return boolean
-function Work.isDown()
-    local revive <const> = LocalPlayer.state.revive
+AddStateBagChangeHandler('revive', ('player:%s'):format(cache.serverId), function(_, _, value)
+    if not busy or not value or value.state == 'alive' or value.state == 'reviving' then return end
 
-    return IsEntityDead(cache.ped) or (revive ~= nil and revive.state ~= 'alive')
-end
+    exports.cobalt_core:cancelProgress()
+end)
 
 return Work

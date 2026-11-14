@@ -2,7 +2,7 @@ local Registry <const> = require 'server.registry'
 local Payout <const> = require 'server.payout'
 local Vehicles <const> = require 'server.vehicles'
 
-local STOP_RADIUS <const> = 10.0
+local STOP_RADIUS <const> = 20.0
 local REACH_SLACK <const> = 8.0
 local FASTEST_METERS_PER_SECOND <const> = 70.0
 
@@ -58,26 +58,30 @@ function Taxi.view(shift)
     local stop <const> = currentStop(task, shift.def.taxi)
 
     return {
-        title = ('%s %s'):format(task.stage == 'pickup' and 'Pick up at' or 'Drop off at', stop.label),
+        title = locale(('taxi.title_%s'):format(task.stage), stop.label),
         label = stop.label,
         coords = stop.coords.xyz,
         radius = STOP_RADIUS,
-        step = task.stage == 'pickup' and 'Pick up the fare' or 'Drop off the fare',
+        step = locale(('taxi.step_%s'):format(task.stage)),
         stage = task.stage,
-        passenger = task.stage == 'pickup' and stop.passenger or nil,
+        passenger = stop.passenger,
     }
 end
 
 ---@param shift Shift
 ---@param stage 'pickup' | 'dropoff'
----@return integer? vehicle
+---@return integer? vehicle the crew cab the player drives, when it is at the stop
 local function atStop(shift, stage)
     local task <const> = shift.task --[[@as TaxiTask]]
 
     if task.stage ~= stage then return end
-    if not Registry.near(shift.src, currentStop(task, shift.def.taxi).coords, STOP_RADIUS + REACH_SLACK) then return end
 
-    return Vehicles.crewVehicleOf(shift)
+    local vehicle <const> = Vehicles.crewVehicleOf(shift)
+    local stop <const> = currentStop(task, shift.def.taxi).coords.xyz
+
+    if not vehicle or #(GetEntityCoords(vehicle) - stop) > STOP_RADIUS + REACH_SLACK then return end
+
+    return vehicle
 end
 
 ---@param shift Shift
@@ -109,9 +113,7 @@ function Taxi.finish(shift, target)
         task.stage = 'dropoff'
         task.pickedAt = GetGameTimer()
 
-        local text <const> = ('Fare on board. Drive them to %s.'):format(taxi.stops[task.dropoff].label)
-
-        Registry.notifyCrew(shift, text, 'success')
+        Registry.notifyCrew(shift, locale('taxi.on_board', taxi.stops[task.dropoff].label), 'success')
 
         return true
     end
@@ -131,7 +133,7 @@ function Taxi.finish(shift, target)
     end
 
     Taxi.assign(shift)
-    Registry.notifyCrew(shift, ('Next fare is waiting at %s.'):format(taxi.stops[task.pickup].label))
+    Registry.notifyCrew(shift, locale('taxi.next_fare', taxi.stops[task.pickup].label))
 
     return true
 end
@@ -145,7 +147,7 @@ function Taxi.reset(shift)
 
     Taxi.assign(shift)
 
-    return ('Your fare got out and left. Next fare is at %s.'):format(shift.def.taxi.stops[task.pickup].label)
+    return locale('taxi.fare_left', shift.def.taxi.stops[task.pickup].label)
 end
 
 return Taxi

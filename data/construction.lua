@@ -56,19 +56,22 @@ local tasks <const> = {
         label = 'Breaking up the concrete',
         prompt = 'Use the jackhammer',
         duration = { 9000, 12000 },
-        anim = { scenario = 'WORLD_HUMAN_CONST_DRILL' },
+        anim = { dict = 'amb@world_human_const_drill@male@drill@base', clip = 'base', flag = 1 },
+        prop = { model = 'prop_tool_jackham', bone = 28422, pos = vec3(0.0, 0.0, 0.0), rot = vec3(0.0, 0.0, 0.0) },
     },
     hammer = {
         label = 'Hammering the formwork',
         prompt = 'Hammer the formwork',
         duration = { 9000, 12000 },
-        anim = { scenario = 'WORLD_HUMAN_HAMMERING' },
+        anim = { dict = 'amb@world_human_hammering@male@base', clip = 'base', flag = 1 },
+        prop = { model = 'prop_tool_hammer', bone = 28422, pos = vec3(0.0, 0.0, 0.0), rot = vec3(0.0, 0.0, 0.0) },
     },
     weld = {
         label = 'Welding the steel',
         prompt = 'Weld the steel',
         duration = { 10000, 13000 },
-        anim = { scenario = 'WORLD_HUMAN_WELDING' },
+        anim = { dict = 'amb@world_human_welding@male@base', clip = 'base', flag = 1 },
+        prop = { model = 'prop_weld_torch', bone = 28422, pos = vec3(0.0, 0.0, 0.0), rot = vec3(0.0, 0.0, 0.0) },
     },
 }
 

@@ -30,7 +30,6 @@ return {
         perMeter = 0.02, -- dollars per meter between pickup and drop-off, straight line
         minTrip = 600.0, -- meters a drop-off must be from its pickup
         passengers = { 's_m_m_cntrybar_01', 'u_f_y_comjane', 'a_f_y_hipster_04', 's_m_m_highsec_02', 'a_m_y_hipster_03' }, -- ped models a fare can spawn as
-        -- Kerbside stops, each a road lane next to the pavement (checked against GTA's vehicle nodes):
         -- coords is where the cab pulls up, heading along traffic; passenger is where the fare waits on the pavement, facing the road
         stops = {
             { label = 'Mirror Park Boulevard', coords = vec4(1190.39, -436.18, 66.09, 166.8), passenger = vec4(1188.05, -435.63, 66.09, 256.8) },

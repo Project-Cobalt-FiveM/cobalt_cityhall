@@ -1,4 +1,5 @@
 local Work <const> = require 'client.work'
+local Props <const> = require 'client.props'
 local Customers <const> = require 'client.hotdog.customers'
 local Dui <const> = require 'client.hotdog.dui'
 local Dressing <const> = require 'client.hotdog.dressing'
@@ -765,7 +766,8 @@ local function walkBehind(config, cart)
     while #(GetEntityCoords(cache.ped).xy - spot.xy) > 0.4 and GetGameTimer() < deadline do Wait(100) end
 
     SetEntityHeading(cache.ped, heading)
-    TaskStartScenarioInPlace(cache.ped, config.kitchen.scenario, 0, true)
+    Work.playAnim(config.kitchen.anim)
+    Props.hold(config.kitchen.prop)
 end
 
 ---@param config StandConfig
@@ -829,6 +831,7 @@ local function tearDown(s, easeMs)
     RenderScriptCams(false, easeMs > 0, easeMs, true, true)
     DestroyCam(s.cam, false)
     core:HideTextUI()
+    Props.release()
 
     if Work.isDown() then return end
 

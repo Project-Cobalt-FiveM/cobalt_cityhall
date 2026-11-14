@@ -45,5 +45,67 @@
     "command": {
         "shift": "Open your current job",
         "jobsadmin": "Open the jobs dashboard"
+    },
+    "taxi": {
+        "fare_waiting": "Your fare is waiting. Stop next to them and they'll get in.",
+        "stop_here": "Stop the cab here to let your fare out.",
+        "not_out": "Your fare won't get out yet. Pull your cab up to the drop-off.",
+        "title_pickup": "Pick up at %s",
+        "title_dropoff": "Drop off at %s",
+        "step_pickup": "Pick up the fare",
+        "step_dropoff": "Drop off the fare",
+        "on_board": "Fare on board. Drive them to %s.",
+        "next_fare": "Next fare is waiting at %s.",
+        "fare_left": "Your fare got out and left. Next fare is at %s."
+    },
+    "trucking": {
+        "label": "Trucking",
+        "description": "Load cargo at the Elysian Island depot and deliver it across the state.",
+        "done": "Boxes delivered",
+        "site": "Elysian Island Depot",
+        "vehicle": "box truck",
+        "unit": "box",
+        "loading": "Loading a box",
+        "load": "Load a box",
+        "unloading": "Unloading a box",
+        "unload": "Unload a box",
+        "stops": {
+            "paleto_truck_stop": "Paleto Bay truck stop",
+            "grapeseed_yard": "Grapeseed loading yard",
+            "sandy_shores_247": "Sandy Shores 24/7",
+            "youtool": "YouTool",
+            "harmony_yard": "Harmony truck yard",
+            "gopostal": "Vinewood GoPostal depot",
+            "pacific_bluffs_gas": "Pacific Bluffs gas station",
+            "mega_mall": "Davis Mega Mall",
+            "orchardville_warehouse": "Orchardville Avenue warehouse",
+            "port_warehouse": "Port of Los Santos warehouse"
+        }
+    },
+    "fishing": {
+        "label": "Fishing",
+        "description": "Fish off Del Perro Pier and sell your catch at the fish market.",
+        "done": "Catches",
+        "goods": "Fish",
+        "site": "Fish market",
+        "rod": "Fishing rod",
+        "bait": "Fish bait",
+        "spot": "Fishing spot",
+        "rod_needed": "fishing rod",
+        "bait_needed": "fish bait",
+        "cast": "Cast a line",
+        "reeling": "Reeling in",
+        "got_away": "The fish slipped the hook. Cast again.",
+        "pier_end": "End of Del Perro Pier"
+    },
+    "farming": {
+        "label": "Farming",
+        "description": "Harvest crops at the Grapeseed farm and sell them at the stand.",
+        "done": "Crops harvested",
+        "goods": "Crops",
+        "site": "Grapeseed Farm",
+        "crop": "Crop",
+        "harvesting": "Harvesting",
+        "harvest": "Harvest"
     }
 }

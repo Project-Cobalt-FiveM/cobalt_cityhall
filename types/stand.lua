@@ -58,7 +58,8 @@
 ---@field steam StandFx
 ---@field smoke StandFx
 ---@field sizzle { sound: string, volume: number, distance: number } cobalt_sound file looped on the cart while something is on the grill
----@field scenario string
+---@field anim JobAnim played while cooking
+---@field prop JobProp held while cooking
 
 ---@class StandSauce
 ---@field id SauceId

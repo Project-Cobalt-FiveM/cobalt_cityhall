@@ -21,6 +21,17 @@
 ---@field bone integer
 ---@field pos vector3
 ---@field rot vector3
+---@field rotOrder? integer the order the rotation axes apply in, 0 by default
+
+---@class JobAnim
+---@field dict? string
+---@field clip? string
+---@field scenario? string played instead of `dict` and `clip`
+---@field flag? integer
+
+---@class JobSkillCheck
+---@field difficulty SkillCheckDifficulty | SkillCheckDifficulty[] one round per entry
+---@field failed string shown when the player misses
 
 ---@class JobSwingParticle
 ---@field asset string
@@ -39,8 +50,9 @@
 ---@field label string shown on the progress bar
 ---@field prompt string shown before the player starts
 ---@field duration integer | { [1]: integer, [2]: integer }
----@field anim { dict?: string, clip?: string, scenario?: string, flag?: integer }
----@field prop? JobProp
+---@field anim JobAnim
+---@field prop? JobProp held in the hand from the start of the action to its end
+---@field skillCheck? JobSkillCheck passed before the progress bar starts
 ---@field swing? JobSwing particles and a sound on every swing of the anim
 
 ---@class JobVehicle
@@ -58,7 +70,7 @@
 ---@class TaxiStop
 ---@field label string
 ---@field coords vector4 the kerbside lane point the cab stops at, heading along traffic
----@field passenger vector4 where the fare waits on the pavement, facing the road
+---@field passenger vector4 the pavement spot facing the road where the fare waits, or walks to after a drop-off
 
 ---@class TaxiConfig
 ---@field base integer
@@ -198,7 +210,7 @@
 ---@field task? string the stop's task key
 ---@field heading? number the way the player faces for the work
 ---@field marker? boolean
----@field passenger? vector4 where a taxi fare waits
+---@field passenger? vector4 the pavement a taxi fare waits on at a pickup and walks to at a drop-off
 ---@field distance? integer meters from the player, filled in on the client
 
 ---@class CrewMemberView

@@ -72,7 +72,8 @@ return {
             steam = { asset = 'core', name = 'ent_amb_cluckb_steam', scale = 0.12, lift = 0.03 }, -- particle over a cooking well; lift is meters above it
             smoke = { asset = 'core', name = 'ent_anim_bbq', scale = 0.15, lift = 0.04 }, -- particle over burnt food; lift is meters above the well
             sizzle = { sound = 'grill_sizzle', volume = 0.55, distance = 14.0 }, -- cobalt_sound file, volume from 0.0 to 1.0, and meters it carries
-            scenario = 'PROP_HUMAN_BBQ', -- scenario the player plays while cooking
+            anim = { dict = 'amb@prop_human_bbq@male@base', clip = 'base', flag = 1 }, -- animation the player plays while cooking
+            prop = { model = 'prop_fish_slice_01', bone = 28422, pos = vec3(0.0, 0.0, 0.0), rot = vec3(0.0, 0.0, 0.0) }, -- spatula held while cooking: model, ped bone, and position and rotation on the bone
         },
         -- Sauces and toppings: bottle model, kind ('line' is squeezed along the hot dog, 'chunks' is sprinkled) and the piece model laid down
         sauces = {

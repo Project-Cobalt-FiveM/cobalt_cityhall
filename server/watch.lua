@@ -1,6 +1,7 @@
 local Registry <const> = require 'server.registry'
 local Shifts <const> = require 'server.shifts'
 local Vehicles <const> = require 'server.vehicles'
+local Props <const> = require 'server.props'
 
 local CHECK_MS <const> = 5000
 local ABANDON_RANGE <const> = 150.0
@@ -85,6 +86,8 @@ AddStateBagChangeHandler('revive', ANY_BAG, function(bagName, _, value)
     if not shift then return end
 
     shift.pending = nil
+
+    Props.release(src)
 
     Vehicles.closeDoors(shift)
 

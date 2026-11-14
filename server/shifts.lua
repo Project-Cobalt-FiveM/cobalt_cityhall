@@ -1,5 +1,6 @@
 local Registry <const> = require 'server.registry'
 local Vehicles <const> = require 'server.vehicles'
+local Props <const> = require 'server.props'
 local Jobs <const> = require 'shared.jobs'
 
 ---@class JobKindHandler
@@ -204,6 +205,7 @@ function Shifts.stop(src, reason)
     if not shift then return end
 
     Registry.shifts[src] = nil
+    Props.release(src)
 
     local stop <const> = Shifts.kind(shift).stop
 

@@ -1,14 +1,14 @@
 ---@type JobData
 return {
-    label = 'Farming',
-    description = 'Harvest crops at the Grapeseed farm and sell them at the stand.',
+    label = locale('farming.label'),
+    description = locale('farming.description'),
     icon = 'plant',
     kind = 'gather',
-    doneLabel = 'Crops harvested',
-    goods = 'Crops',
+    doneLabel = locale('farming.done'),
+    goods = locale('farming.goods'),
     crewSize = 4,
     site = {
-        label = 'Grapeseed Farm',
+        label = locale('farming.site'),
         coords = vec4(2932.2, 4623.98, 48.72, 38.49),
         ped = 'a_m_m_farmer_01',
         scenario = 'WORLD_HUMAN_CLIPBOARD',
@@ -19,16 +19,17 @@ return {
     -- Things to work at the farm
     groups = {
         {
-            label = 'Crop',
+            label = locale('farming.crop'),
             props = { 'prop_veg_crop_03_cab', 'prop_veg_crop_03_pump' }, -- prop models spawned at the points, one per point in turn
             radius = 1.5, -- meters from a point the player can work it
             cooldown = 180000, -- milliseconds a worked point rests before it can be worked again; 0 never rests
             amount = { 1, 2 }, -- items per action, picked between the two
             action = {
-                label = 'Harvesting', -- progress bar text
-                prompt = 'Harvest', -- target option text
+                label = locale('farming.harvesting'), -- progress bar text
+                prompt = locale('farming.harvest'), -- target option text
                 duration = 5000, -- milliseconds, or { shortest, longest } picked between
                 anim = { dict = 'amb@world_human_gardener_plant@female@base', clip = 'base_female', flag = 1 },
+                prop = { model = 'prop_cs_trowel', bone = 28422, pos = vec3(0.0, 0.0, 0.0), rot = vec3(0.0, 0.0, 0.0) }, -- trowel held in the hand: model, ped bone, and position and rotation on the bone
             },
             -- Chance of each crop, as weights out of the total
             yields = {
