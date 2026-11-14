@@ -1,5 +1,4 @@
 local config <const> = require 'config'
-local db <const> = require 'server.db'
 local Registry <const> = require 'server.registry'
 local Shifts <const> = require 'server.shifts'
 local Center <const> = require 'server.center'
@@ -44,7 +43,7 @@ local function dashboard()
 
     table.sort(workers, function(a, b) return a.startedAt < b.startedAt end)
 
-    local paid <const> = db.paidToday()
+    local status <const> = exports.cobalt_management:GetJobStatus(Jobs.order)
     local jobs <const> = {}
 
     for _, id in ipairs(Jobs.order) do
@@ -52,7 +51,7 @@ local function dashboard()
             id = id,
             open = not Center.closed[id],
             workers = counts[id] or 0,
-            paidToday = paid[id] or 0,
+            paidToday = status[id].paidToday,
         }
     end
 
@@ -70,9 +69,7 @@ lib.callback.register('cobalt_cityhall:adminEnd', function(src, target)
 
     if not shift then return end
 
-    local message <const> = ('Staff ended your %s shift. You keep the $%d you earned.'):format(shift.def.label, shift.earned)
-
-    Shifts.stop(target, message)
+    Shifts.stop(target, locale('admin.ended_shift', shift.def.label, shift.earned))
     lib.print.info(('%s ended the shift of player %d'):format(GetPlayerName(src), target))
 
     return dashboard()
@@ -82,14 +79,14 @@ lib.callback.register('cobalt_cityhall:adminToggle', function(src, jobId, open)
     if not isAdmin(src) or not Jobs.byId[jobId] or type(open) ~= 'boolean' then return end
 
     Center.closed[jobId] = not open or nil
-    db.setOpen(jobId, open)
+    exports.cobalt_management:SetJobOpen(jobId, open)
     lib.print.info(('%s set %s %s'):format(GetPlayerName(src), jobId, open and 'open' or 'closed'))
 
     return dashboard()
 end)
 
 lib.addCommand('jobsadmin', {
-    help = 'Open the jobs dashboard',
+    help = locale('command.jobsadmin'),
     restricted = ('group.%s'):format(config.adminRank),
 }, function(src)
     TriggerClientEvent('cobalt_cityhall:openAdmin', src)

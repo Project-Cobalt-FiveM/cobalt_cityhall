@@ -1,10 +1,7 @@
 local config <const> = require 'config'
-local db <const> = require 'server.db'
 local Registry <const> = require 'server.registry'
 
 local Cobalt <const> = exports.cobalt_core:GetCoreObject()
-
-local ACCOUNT_TEXT <const> = { bank = 'to your bank', cash = 'in cash' }
 
 local Payout <const> = {}
 
@@ -26,8 +23,8 @@ function Payout.pay(shift, amount, reason, account)
 
     shift.earned += total
 
-    db.logPayout(shift.citizenid, shift.def.id, total)
-    Registry.notify(shift.src, ('$%d %s, %s'):format(total, ACCOUNT_TEXT[into] or '', reason), 'success')
+    exports.cobalt_management:AddJobPayout(shift.def.id, total)
+    Registry.notify(shift.src, locale(('payout.%s'):format(into), total, reason), 'success')
 
     return total
 end

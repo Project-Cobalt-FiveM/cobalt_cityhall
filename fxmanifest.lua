@@ -16,11 +16,11 @@ ui_page '_nui/build/index.html'
 dependencies {
     'cobalt_core',
     'cobalt_inventory',
+    'cobalt_management',
     'cobalt_sound',
     'cobalt_vehiclekeys',
     'ox_lib',
     'ox_target',
-    'cobalt_mysql',
 }
 
 shared_script '@ox_lib/init.lua'
@@ -29,11 +29,7 @@ ox_libs { 'locale' }
 
 client_script 'client/init.lua'
 
-server_scripts {
-    '@cobalt_mysql/lib/MySQL.lua',
-    '@cobalt_core/server/migrationgate.lua',
-    'server/init.lua',
-}
+server_script 'server/init.lua'
 
 files {
     'config.lua',

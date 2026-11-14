@@ -1,5 +1,4 @@
 local config <const> = require 'config'
-local db <const> = require 'server.db'
 local Registry <const> = require 'server.registry'
 local Shifts <const> = require 'server.shifts'
 local Jobs <const> = require 'shared.jobs'
@@ -28,7 +27,7 @@ end
 ---@param src integer
 ---@return string
 local function playerName(src)
-    return Player(src).state['cobalt:name'] or ('Citizen %d'):format(src)
+    return Player(src).state['cobalt:name'] or locale('center.citizen', src)
 end
 
 ---@return { id: string, open: boolean }[]
@@ -47,13 +46,13 @@ lib.callback.register('cobalt_cityhall:jobs', function()
 end)
 
 lib.callback.register('cobalt_cityhall:signUp', function(src, jobId)
-    if type(jobId) ~= 'string' or not Jobs.byId[jobId] then return false, 'That job does not exist' end
-    if not atCenter(src) then return false, 'Sign up at the job center' end
-    if Center.closed[jobId] then return false, 'Staff closed this job for now' end
+    if type(jobId) ~= 'string' or not Jobs.byId[jobId] then return false, locale('center.unknown_job') end
+    if not atCenter(src) then return false, locale('center.sign_up_here') end
+    if Center.closed[jobId] then return false, locale('center.closed') end
 
     local ok, reason = Shifts.start(src, jobId)
 
-    if ok then Registry.notify(src, ('You signed up for %s'):format(Jobs.byId[jobId].label), 'success') end
+    if ok then Registry.notify(src, locale('center.signed_up', Jobs.byId[jobId].label), 'success') end
 
     return ok, reason
 end)
@@ -63,7 +62,7 @@ lib.callback.register('cobalt_cityhall:quit', function(src)
 
     if not shift then return false end
 
-    Shifts.stop(src, ('You quit %s'):format(shift.def.label))
+    Shifts.stop(src, locale('center.quit', shift.def.label))
 
     return true
 end)
@@ -113,23 +112,23 @@ end
 lib.callback.register('cobalt_cityhall:invite', function(src, target)
     local shift <const> = Registry.get(src)
 
-    if not shift then return false, 'You have no job' end
+    if not shift then return false, locale('center.no_job') end
 
     if math.type(target) ~= 'integer' or target == src or not Player(target).state.LoggedIn then
-        return false, 'That player is gone'
+        return false, locale('center.player_gone')
     end
 
-    if crewFull(shift) then return false, 'Your crew is full' end
+    if crewFull(shift) then return false, locale('center.your_crew_full') end
 
     if #(Registry.coords(target) - Registry.coords(src)) > config.crew.inviteRange then
-        return false, 'They walked away'
+        return false, locale('center.walked_away')
     end
 
     local guest <const> = Registry.get(target)
 
-    if guest and guest.def.id ~= shift.def.id then return false, ('They work as %s'):format(guest.def.label) end
-    if guest?.crew then return false, 'They are already in a crew' end
-    if not guest and exports.cobalt_core:GetTempJob(target) then return false, 'They are busy with other work' end
+    if guest and guest.def.id ~= shift.def.id then return false, locale('center.works_as', guest.def.label) end
+    if guest?.crew then return false, locale('center.in_crew') end
+    if not guest and exports.cobalt_core:GetTempJob(target) then return false, locale('center.busy') end
 
     invites[target] = { from = src, job = shift.def.id, expires = os.time() + config.crew.inviteSeconds }
 
@@ -140,7 +139,7 @@ lib.callback.register('cobalt_cityhall:invite', function(src, target)
         seconds = config.crew.inviteSeconds,
     })
 
-    Registry.notify(src, ('Invite sent to %s'):format(playerName(target)))
+    Registry.notify(src, locale('center.invite_sent', playerName(target)))
 
     return true
 end)
@@ -153,19 +152,19 @@ lib.callback.register('cobalt_cityhall:respond', function(src, accept)
     if not invite or invite.expires < os.time() then return false end
 
     if not accept then
-        Registry.notify(invite.from, ('%s declined your invite'):format(playerName(src)))
+        Registry.notify(invite.from, locale('center.declined', playerName(src)))
         return false
     end
 
     local host <const> = Registry.get(invite.from)
 
-    if not host or host.def.id ~= invite.job then return false, 'The crew is gone' end
-    if Center.closed[host.def.id] then return false, 'Staff closed this job for now' end
-    if crewFull(host) then return false, 'The crew is full' end
+    if not host or host.def.id ~= invite.job then return false, locale('center.crew_gone') end
+    if Center.closed[host.def.id] then return false, locale('center.closed') end
+    if crewFull(host) then return false, locale('center.crew_full') end
 
     local guest = Registry.get(src)
 
-    if guest and (guest.def.id ~= host.def.id or guest.crew) then return false, 'Quit your current job first' end
+    if guest and (guest.def.id ~= host.def.id or guest.crew) then return false, locale('center.quit_first') end
 
     if not guest then
         local ok, reason = Shifts.start(src, host.def.id)
@@ -176,12 +175,12 @@ lib.callback.register('cobalt_cityhall:respond', function(src, accept)
     end
 
     Shifts.joinCrew(host, guest)
-    Registry.notify(host.src, ('%s joined your crew'):format(guest.name), 'success')
+    Registry.notify(host.src, locale('center.joined', guest.name), 'success')
 
     return true
 end)
 
-lib.addCommand('shift', { help = 'Open your current job' }, function(src)
+lib.addCommand('shift', { help = locale('command.shift') }, function(src)
     TriggerClientEvent('cobalt_cityhall:openShift', src)
 end)
 
@@ -190,7 +189,9 @@ AddEventHandler('playerDropped', function()
 end)
 
 CreateThread(function()
-    Center.closed = db.closedJobs()
+    for id, status in pairs(exports.cobalt_management:GetJobStatus(Jobs.order)) do
+        Center.closed[id] = not status.open or nil
+    end
 end)
 
 return Center

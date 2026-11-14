@@ -13,5 +13,37 @@
         "not_given": "The card couldn't go in your pockets",
         "refund": "%s refund",
         "bought": "You bought %s"
+    },
+    "center": {
+        "citizen": "Citizen %d",
+        "unknown_job": "That job does not exist",
+        "sign_up_here": "Sign up at the job center",
+        "closed": "Staff closed this job for now",
+        "signed_up": "You signed up for %s",
+        "quit": "You quit %s",
+        "no_job": "You have no job",
+        "player_gone": "That player is gone",
+        "your_crew_full": "Your crew is full",
+        "walked_away": "They walked away",
+        "works_as": "They work as %s",
+        "in_crew": "They are already in a crew",
+        "busy": "They are busy with other work",
+        "invite_sent": "Invite sent to %s",
+        "declined": "%s declined your invite",
+        "crew_gone": "The crew is gone",
+        "crew_full": "The crew is full",
+        "quit_first": "Quit your current job first",
+        "joined": "%s joined your crew"
+    },
+    "payout": {
+        "bank": "$%d to your bank, %s",
+        "cash": "$%d in cash, %s"
+    },
+    "admin": {
+        "ended_shift": "Staff ended your %s shift. You keep the $%d you earned."
+    },
+    "command": {
+        "shift": "Open your current job",
+        "jobsadmin": "Open the jobs dashboard"
     }
 }
